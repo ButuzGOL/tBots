@@ -1,6 +1,7 @@
 // russian title
 // check trailer
-// cron
+// dev/prod variable
+// check cron
 
 const axios = require('axios');
 const { parseString } = require('xml2js');
@@ -31,9 +32,9 @@ const logger = createLogger({
 
 moment.locale('ru');
 
-
 const API = 'https://planetakino.ua/odessa/showtimes/xml/';
-const CHAT_NAME = '@butuzgoltestchat';
+// const CHAT_NAME = '@butuzgoltestchat';
+const CHAT_NAME = '@kino_primera_ukraine';
 
 const bot = new Telegraf(botToken);
 
@@ -112,6 +113,10 @@ async function getMovies(dbData) {
             director: res.director,
             year: res.year,
           };
+          if (res.rating === 'N/A') {
+            logger.error('imdb raiting not found');
+            return resolve();
+          }
           search(`${item.origName} ${new Date().getFullYear()} трейлер на русском`, youtubeSearchOpts, (err, res) => {
             if (err) {
               logger.error('youtube fetching error %o', err);
@@ -164,14 +169,17 @@ async function setData(data) {
 }
 
 function formatMessage(item) {
-  return [
-    item.imdb ? item.title : `[${item.title}](${item.link})`,
+  const result = [
+    item.youtube ? item.title : `[${item.title}](${item.link})`,
     item.imdb && `imdb: ${item.imdb.rating}`,
     item.imdb && `Длительность: ${item.imdb.runtime.replace('h', 'ч').replace('min', 'мин')}`,
     `Начало: ${moment(item.dtStart).format('LL')}`,
     `Конец: ${moment(item.dtEnd).format('LL')}`,
-    item.youtube && item.youtube.link,
+    item.imdb && `Режиссер: ${item.imdb.director}`,
+    item.youtube && `[Трейлер](${item.youtube.link})`,
   ].filter(item => item).join('\n');
+
+  return result;
 }
 
 async function sendMessage(bot, item) {
