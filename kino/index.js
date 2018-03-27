@@ -1,40 +1,25 @@
 // russian title
 // check trailer
-// dev/prod variable
-// check cron
+// voters count
 
 const axios = require('axios');
 const { parseString } = require('xml2js');
 const imdb = require('imdb');
 const nameToImdb = require('name-to-imdb');
-const GitHub = require('github-api');
 const search = require('youtube-search');
 const Telegraf = require('telegraf');
 const moment = require('moment');
-const { createLogger, transports, format } = require('winston');
+const { getLogger, getData, setData, sendMessage } = require('../common/utils');
 
-const { botToken, youtubeKey, ghToken, gistId } = require('./_cred');
+const { youtubeKey } = require('./_cred');
+const { botToken } = require('../_cred');
 
-const { combine, timestamp, colorize, printf, simple, splat } = format;
-const logger = createLogger({
-  transports: [
-    new transports.Console({ format: combine(splat(), colorize(), simple()) }),
-    new transports.File({
-      format: combine(
-        splat(),
-        timestamp(),
-        printf(info => `${info.timestamp} ${info.level}: ${info.message}`),
-      ),
-      filename: __dirname + '/main.log'
-    }),
-  ],
-});
+const logger = getLogger(__dirname);
 
 moment.locale('ru');
 
 const API = 'https://planetakino.ua/odessa/showtimes/xml/';
-// const CHAT_NAME = '@butuzgoltestchat';
-const CHAT_NAME = '@kino_primera_ukraine';
+const CHAT_NAME = process.env.NODE_ENV === 'production' ? '@kino_primera_ukraine' : '@butuzgoltestchat';
 
 const bot = new Telegraf(botToken);
 
@@ -43,8 +28,6 @@ const youtubeSearchOpts = {
   // channelId: 'UC19Y4lMWFVa2vUNtWHwOmVg',
   key: youtubeKey,
 };
-
-const gh = new GitHub({ token: ghToken });
 
 async function getMovies(dbData) {
   logger.info('Get movies');
@@ -144,32 +127,8 @@ async function getMovies(dbData) {
   return movies;
 }
 
-async function getData() {
-  logger.info('Fetching data from db...');
-  let gistRead;
-  try {
-    const gist = await gh.getGist(gistId);
-    gistRead = await gist.read();
-  } catch(e) {
-    logger.error('Fetched data from db error', e);
-  }
-  return JSON.parse(gistRead.data.files.kino.content);
-}
-
-async function setData(data) {
-  logger.info('Setting data to db...');
-  try {
-    const gist = await gh.getGist(gistId);
-    const gistRead = await gist.update({
-      files: { kino: { content: JSON.stringify(data, null, 2) } },
-    });
-  } catch(e) {
-    logger.error('Setting data to db error %o', e);
-  }
-}
-
 function formatMessage(item) {
-  const result = [
+  return [
     item.youtube ? item.title : `[${item.title}](${item.link})`,
     item.imdb && `imdb: ${item.imdb.rating}`,
     item.imdb && `Длительность: ${item.imdb.runtime.replace('h', 'ч').replace('min', 'мин')}`,
@@ -178,30 +137,23 @@ function formatMessage(item) {
     item.imdb && `Режиссер: ${item.imdb.director}`,
     item.youtube && `[Трейлер](${item.youtube.link})`,
   ].filter(item => item).join('\n');
-
-  return result;
 }
 
-async function sendMessage(bot, item) {
+async function sendMovieMessage(bot, item) {
   logger.info('Sending message... %s %s', item.title, item.origName);
-  try {
-    await bot.telegram.sendMessage(CHAT_NAME, formatMessage(item), { parse_mode: 'Markdown' });
-  } catch(e) {
-    logger.error('Setting message error %o', e);
-  }
+  await sendMessage(bot, CHAT_NAME, formatMessage(item));
 }
 
 (async function() {
-  let data = await getData();
+  let data = await getData('kino');
   const movies = await getMovies(data);
   
   if (movies.length) {
-    data = data.concat(movies);
-    await setData(data);
+    await setData('kino', data.concat(movies));
 
     await (async function() {
       for(const item of movies) {
-        await sendMessage(bot, item);
+        await sendMovieMessage(bot, item);
       }
     })();
 
