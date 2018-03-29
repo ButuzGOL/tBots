@@ -223,7 +223,7 @@ debug@^2.1.2:
   dependencies:
     ms "2.0.0"
 
-debug@^3.0.0, debug@^3.1.0:
+debug@^3.1.0:
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/debug/-/debug-3.1.0.tgz#5bb5a0672628b64149566ba16819e61518c67261"
   dependencies:
@@ -714,10 +714,6 @@ needle@^1.1.2:
     debug "^2.1.2"
     iconv-lite "^0.4.4"
 
-node-fetch@^2.0.0:
-  version "2.1.1"
-  resolved "https://registry.yarnpkg.com/node-fetch/-/node-fetch-2.1.1.tgz#369ca70b82f50c86496104a6c776d274f4e4a2d4"
-
 node-forge@^0.7.1:
   version "0.7.4"
   resolved "https://registry.yarnpkg.com/node-forge/-/node-forge-0.7.4.tgz#8e6e9f563a1e32213aa7508cded22aa791dbf986"
@@ -921,10 +917,6 @@ safe-buffer@^5.0.1, safe-buffer@^5.1.1:
   version "5.1.1"
   resolved "https://registry.yarnpkg.com/safe-buffer/-/safe-buffer-5.1.1.tgz#893312af69b2123def71f57889001671eeb2c853"
 
-sandwich-stream@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/sandwich-stream/-/sandwich-stream-1.0.0.tgz#7830e45797b5933287f1f9b28f871907456262f2"
-
 sax@0.5.x:
   version "0.5.8"
   resolved "https://registry.yarnpkg.com/sax/-/sax-0.5.8.tgz#d472db228eb331c2506b0e8c15524adb939d12c1"
@@ -994,14 +986,6 @@ strip-ansi@^3.0.0:
 supports-color@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/supports-color/-/supports-color-2.0.0.tgz#535d045ce6b6363fa40117084629995e9df324c7"
-
-telegraf@^3.20.0:
-  version "3.20.0"
-  resolved "https://registry.yarnpkg.com/telegraf/-/telegraf-3.20.0.tgz#b45f35209e505e6dd1cbeff94c5d85f02db52f5d"
-  dependencies:
-    debug "^3.0.0"
-    node-fetch "^2.0.0"
-    sandwich-stream "^1.0.0"
 
 tough-cookie@~2.2.0:
   version "2.2.2"

@@ -88,17 +88,14 @@ async function getItems(path, type, titleFilter, dbData, countOfPages = 2) {
     .sort((a, b) => new Date(a.date) - new Date(b.date));
 }
 
-function formatMessage(item) {
-  return [
+async function sendVideoMessage(bot, item) {
+  const formattedMessage = [
     item.title,
     `Дата: ${moment(item.date).format('LL')}`,
     `[Обзор](${item.link})`,
   ].join('\n');
-}
-
-async function sendVideoMessage(bot, item) {
   logger.info('Sending message... %s %s', item.title, item.date);
-  await sendMessage(bot, CHAT_NAME, formatMessage(item));
+  await sendMessage(bot, CHAT_NAME, formattedMessage);
 }
 
 (async function() {

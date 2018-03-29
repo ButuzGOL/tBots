@@ -22,7 +22,7 @@ function getLogger(dir) {
     logger.add(new transports.File({
       format: combine(
         splat(),
-        timestamp(),
+        timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
         printf(info => `${info.timestamp} ${info.level}: ${info.message}`),
       ),
       filename: dir + '/main.log'
@@ -57,7 +57,7 @@ async function setData(name, data) {
 }
 
 async function sendMessage(bot, chatName, message) {
-  logger.info('Sending message... %s', message.slice(0, 20) + '...');
+  logger.info('Sending message... %s', message.replace(/\n/g, ' ').slice(0, 20) + '...');
   try {
     await bot.telegram.sendMessage(chatName, message, { parse_mode: 'Markdown' });
   } catch(e) {
