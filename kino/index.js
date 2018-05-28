@@ -48,7 +48,7 @@ async function getMovies(dbData) {
   movies = movies
     .filter(item => {
       const startDate = new Date(item['dt-start'][0]);
-      startDate.setDate(startDate.getDate() - 5);
+      startDate.setDate(startDate.getDate() - 1);
       const result = startDate.getTime() < new Date().getTime();
       return result;
     })
@@ -133,7 +133,7 @@ function formatMessage(item) {
     item.imdb && `imdb: ${item.imdb.rating}`,
     item.imdb && `Длительность: ${item.imdb.runtime.replace('h', 'ч').replace('min', 'мин')}`,
     `Начало: ${moment(item.dtStart).format('LL')}`,
-    `Конец: ${moment(item.dtEnd).format('LL')}`,
+    // `Конец: ${moment(item.dtEnd).format('LL')}`,
     item.imdb && `Режиссер: ${item.imdb.director}`,
     item.youtube && `[Трейлер](${item.youtube.link})`,
   ].filter(item => item).join('\n');

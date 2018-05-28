@@ -83,7 +83,7 @@ function formatMessage(data) {
     'Привет',
     `Погода ${formattedWeather.join(' ')}`,
     `USD ${kurs.usd.buy} ${kurs.usd.sell}`,
-    `Bitkoin ${kurs.bitkoin}`,
+    `Bitcoin ${kurs.bitkoin}`,
   ].join('\n');
 }
 
