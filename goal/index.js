@@ -11,7 +11,7 @@ const {
   setData,
   sendMessage,
   sendPhoto,
-} = require('../common/utils');
+} = require('../utils');
 const { botToken } = require('../_cred');
 
 moment.locale('ru');
@@ -19,7 +19,7 @@ moment.locale('ru');
 const TYPE_APL = 'englandPremierLeague';
 const TYPE_CL = 'championsLeague';
 
-const API = 'https://goal24.live';
+const API = 'http://goalhd.net';
 
 const CHAT_NAME =
   process.env.NODE_ENV === 'production'
@@ -155,13 +155,13 @@ async function createImage(url, filename, crop) {
       }
     })();
     if (englandData.length) {
-      await createImage('football.ua/england.html', 'england', [
+      await createImage('football.ua/england/table.html', 'england', [
         220,
-        1170,
-        360,
-        515,
+        220,
+        640,
+        700,
       ]);
-      await sendPhoto(CHAT_NAME, __dirname + '/tmp/england.png');
+      await sendPhoto(bot, CHAT_NAME, __dirname + '/tmp/england.png');
     }
 
     await (async function() {
@@ -170,11 +170,12 @@ async function createImage(url, filename, crop) {
       }
     })();
     if (championsLeagueData.length) {
-      await sendMessage(
-        bot,
-        CHAT_NAME,
-        '[Лига Чемпионов](http://champions.football.ua/results/)',
+      await createImage(
+        'https://sport.ua/cl/results/fixture',
+        'champions-league',
+        [150, 660, 680, 870],
       );
+      await sendPhoto(bot, CHAT_NAME, __dirname + '/tmp/champions-league.png');
     }
 
     logger.info('done');

@@ -2,6 +2,7 @@
 // недвижимость одесса
 // театры одесса
 // события одесса
+// functions and cron
 
 const cheerio = require('cheerio');
 const axios = require('axios');
@@ -9,10 +10,11 @@ const moment = require('moment');
 const Telegraf = require('telegraf');
 const request = require('request-promise');
 
-const { getLogger, getData, setData, sendMessage } = require('../common/utils');
+const { getLogger, getData, setData, sendMessage } = require('../utils');
 const { botToken } = require('../_cred');
 
-const CHAT_NAME = process.env.NODE_ENV === 'production' ? 534377703 : '@butuzgoltestchat';
+const CHAT_NAME =
+  process.env.NODE_ENV === 'production' ? 534377703 : '@butuzgoltestchat';
 
 const WEATHER_API_KEY = '1a1771c098a4a7c1ea9a4dddd0b500b8';
 
@@ -26,19 +28,23 @@ async function getKurs() {
   try {
     const usdPageResult = await axios('https://kurs.com.ua/gorod/1551-odessa/');
     const $ = cheerio.load(usdPageResult.data);
-    const $el = $('[data-blockid="app_kurs_blackMarket_k7vzyzbxe"] tbody tr:first-child');
+    const $el = $(
+      '[data-blockid="app_kurs_blackMarket_k7vzyzbxe"] tbody tr:first-child',
+    );
     const buy = $el.find('[data-rate-type="bid"]').data('rate');
     const sell = $el.find('[data-rate-type="ask"]').data('rate');
     result.usd = { buy, sell };
-  } catch(e) {
+  } catch (e) {
     logger.info('Fetching usd error %o', e);
   }
 
   logger.info('Fetching bitkoin...');
   try {
-    const bitkoinApi = await axios('https://api.coindesk.com/v1/bpi/currentprice.json');
+    const bitkoinApi = await axios(
+      'https://api.coindesk.com/v1/bpi/currentprice.json',
+    );
     result.bitkoin = bitkoinApi.data.bpi.USD.rate;
-  } catch(e) {
+  } catch (e) {
     logger.info('Fetching bitkoin error %o', e);
   }
 
@@ -48,15 +54,21 @@ async function getKurs() {
 async function getWeather() {
   logger.info('Fetching weather...');
   try {
-    const weatherResult = await request(`http://api.openweathermap.org/data/2.5/forecast?q=Odessa,ua&lang=ru&units=metric&appid=${WEATHER_API_KEY}`);
+    const weatherResult = await request(
+      `http://api.openweathermap.org/data/2.5/forecast?q=Odessa,ua&lang=ru&units=metric&appid=${WEATHER_API_KEY}`,
+    );
     const weather = JSON.parse(weatherResult);
     return weather.list.filter(item => {
-      const from = moment().add(1, 'days').set({ hours: 7, minutes: 0 });
-      const to = moment().add(1, 'days').set({ hours: 23, minutes: 0 });
+      const from = moment()
+        .add(1, 'days')
+        .set({ hours: 7, minutes: 0 });
+      const to = moment()
+        .add(1, 'days')
+        .set({ hours: 23, minutes: 0 });
       const itemDate = moment(item.dt_txt);
       return itemDate.isAfter(from) && itemDate.isBefore(to);
     });
-  } catch(e) {
+  } catch (e) {
     logger.info('Fetching weather error %o', e);
   }
 }
@@ -65,7 +77,7 @@ function formatMessage(data) {
   const { kurs, weather } = data;
 
   const maxTemp = Math.round(Math.max(...weather.map(item => item.main.temp)));
-  const minTemp = Math.round(Math.min(...weather.map(item => item.main.temp)));  
+  const minTemp = Math.round(Math.min(...weather.map(item => item.main.temp)));
   const formattedWeather = [
     minTemp === maxTemp ? minTemp : `${minTemp}-${maxTemp}`,
   ];
@@ -74,7 +86,9 @@ function formatMessage(data) {
   weather.forEach(item => {
     const { description } = item.weather[0];
     if (prev !== description) {
-      formattedWeather.push(moment(item.dt_txt).format('H') + ' ' + description);
+      formattedWeather.push(
+        moment(item.dt_txt).format('H') + ' ' + description,
+      );
       prev = description;
     }
   });
@@ -88,7 +102,12 @@ function formatMessage(data) {
 }
 
 async function sendMeMessage(bot, data) {
-  logger.info('Sending message... %s %s %s', data.kurs.usd.buy, data.kurs.usd.sell, data.kurs.bitkoin);
+  logger.info(
+    'Sending message... %s %s %s',
+    data.kurs.usd.buy,
+    data.kurs.usd.sell,
+    data.kurs.bitkoin,
+  );
   await sendMessage(bot, CHAT_NAME, formatMessage(data));
 }
 
