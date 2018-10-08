@@ -1,6 +1,6 @@
 const GitHub = require('github-api');
 const { createLogger, transports, format } = require('winston');
-const { ghToken, gistId } = require('../_cred');
+const { ghToken, gistId } = require('./_cred');
 
 const gh = new GitHub({ token: ghToken });
 
@@ -72,10 +72,13 @@ async function sendMessage(bot, chatName, message) {
   }
 }
 
-async function sendPhoto(bot, chatName, source) {
+async function sendPhoto(bot, chatName, source, extra) {
   logger.info('Sending photo...');
   try {
-    await bot.telegram.sendPhoto(chatName, { source });
+    await bot.telegram.sendPhoto(chatName, source, {
+      parse_mode: 'Markdown',
+      ...extra,
+    });
   } catch (e) {
     logger.error('Sending photo error %o', e);
   }

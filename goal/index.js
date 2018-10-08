@@ -130,7 +130,7 @@ async function createImage(url, filename, crop) {
   image.crop(...crop).write(`${__dirname}/tmp/${filename}.png`);
 }
 
-(async function() {
+(async () => {
   const data = await getData('goal');
   const englandData = await getItems(
     'england',
