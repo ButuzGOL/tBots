@@ -72,10 +72,10 @@ async function sendMessage(bot, chatName, message) {
   }
 }
 
-async function sendPhoto(bot, chatName, source, extra) {
+async function sendPhoto(bot, chatName, photo, extra) {
   logger.info('Sending photo...');
   try {
-    await bot.telegram.sendPhoto(chatName, source, {
+    await bot.telegram.sendPhoto(chatName, photo, {
       parse_mode: 'Markdown',
       ...extra,
     });

@@ -161,7 +161,9 @@ async function createImage(url, filename, crop) {
         640,
         700,
       ]);
-      await sendPhoto(bot, CHAT_NAME, __dirname + '/tmp/england.png');
+      await sendPhoto(bot, CHAT_NAME, {
+        source: __dirname + '/tmp/england.png',
+      });
     }
 
     await (async function() {
@@ -175,7 +177,9 @@ async function createImage(url, filename, crop) {
         'champions-league',
         [150, 660, 680, 870],
       );
-      await sendPhoto(bot, CHAT_NAME, __dirname + '/tmp/champions-league.png');
+      await sendPhoto(bot, CHAT_NAME, {
+        source: __dirname + '/tmp/champions-league.png',
+      });
     }
 
     logger.info('done');
