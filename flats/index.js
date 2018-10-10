@@ -2,11 +2,7 @@ const cheerio = require('cheerio');
 const axios = require('axios');
 const Telegraf = require('telegraf');
 const {
-  getLogger,
-  getData,
-  setData,
-  sendMessage,
-  sendPhoto,
+  getLogger, getData, setData, sendPhoto,
 } = require('../utils');
 
 const { botToken } = require('../_cred');
@@ -16,88 +12,81 @@ const bot = new Telegraf(botToken);
 const logger = getLogger(__dirname);
 
 const API = 'https://novostroyki.lun.ua';
-const CHAT_NAME =
-  process.env.NODE_ENV === 'production'
-    ? '@novostroyki_odessa'
-    : '@butuzgoltestchat';
+const CHAT_NAME = process.env.NODE_ENV === 'production' ? '@novostroyki_odessa' : '@butuzgoltestchat';
 
 async function getItems(dbData, countOfPages = 3) {
   logger.info('Get items');
   let data = {};
-  let promises = [...Array(countOfPages).keys()].map(
-    page =>
-      new Promise(resolve => {
-        logger.info('Fetching page %s', page);
-        data[page] = [];
-        axios
-          .get(
-            `${API}/%D0%B2%D1%81%D0%B5-%D0%BD%D0%BE%D0%B2%D0%BE%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B8-%D0%BE%D0%B4%D0%B5%D1%81%D1%81%D1%8B?page=${page +
-              1}`,
-          )
-          .then(result => {
-            logger.info('Page fetched %s', page);
-            const $ = cheerio.load(result.data);
-            const items = $('.card-grid .card-grid-cell');
-            if (!items.length) logger.warn('Page is empty');
-            Array.prototype.forEach.call(items, item => {
-              const $el = $(item);
-              const id = $el
-                .find('.card>a')
-                .attr('href')
-                .slice(1);
+  const promises = [...Array(countOfPages).keys()].map(
+    page => new Promise((resolve) => {
+      logger.info('Fetching page %s', page);
+      data[page] = [];
+      axios
+        .get(
+          `${API}/%D0%B2%D1%81%D0%B5-%D0%BD%D0%BE%D0%B2%D0%BE%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B8-%D0%BE%D0%B4%D0%B5%D1%81%D1%81%D1%8B?page=${page
+              + 1}`,
+        )
+        .then((result) => {
+          logger.info('Page fetched %s', page);
+          const $ = cheerio.load(result.data);
+          const items = $('.card-grid .card-grid-cell');
+          if (!items.length) logger.warn('Page is empty');
+          Array.prototype.forEach.call(items, (item) => {
+            const $el = $(item);
+            const id = $el
+              .find('.card>a')
+              .attr('href')
+              .slice(1);
 
-              const developer = {};
-              try {
-                developer.name = $el
-                  .find('.card-content .card-text:nth-child(3)')
-                  .text()
-                  .trim();
-                const href = $el
-                  .find('.card-content .card-actions a')
-                  .attr('href');
-                developer.website = href.includes('to=')
-                  ? decodeURIComponent(href.slice(href.indexOf('to=') + 3))
-                  : null;
-              } catch (e) {}
+            const developer = {};
+            try {
+              developer.name = $el
+                .find('.card-content .card-text:nth-child(3)')
+                .text()
+                .trim();
+              const href = $el.find('.card-content .card-actions a').attr('href');
+              developer.website = href.includes('to=')
+                ? decodeURIComponent(href.slice(href.indexOf('to=') + 3))
+                : null;
+            } catch (e) {}
 
-              data[page].push({
-                id,
-                image: `http:${$el.find('.card-image').attr('src')}`,
-                title: $el
-                  .find('.card-title')
-                  .text()
-                  .trim(),
-                location: $el
-                  .find('.card-location')
-                  .text()
-                  .trim(),
-                price: $el
-                  .find('.card-content .card-price-value')
-                  .text()
-                  .trim(),
-                developer,
-                link: `${API}/${id}`,
-              });
+            data[page].push({
+              id,
+              image: `http:${$el.find('.card-image').attr('src')}`,
+              title: $el
+                .find('.card-title')
+                .text()
+                .trim(),
+              location: $el
+                .find('.card-location')
+                .text()
+                .trim(),
+              price: $el
+                .find('.card-content .card-price-value')
+                .text()
+                .trim(),
+              developer,
+              link: `${API}/${id}`,
             });
-            resolve();
-          })
-          .catch(e => {
-            logger.error('Page fetching error %s %o', page, e);
-            resolve();
           });
-      }),
+          resolve();
+        })
+        .catch((e) => {
+          logger.error('Page fetching error %s %o', page, e);
+          resolve();
+        });
+    }),
   );
 
   await Promise.all(promises);
 
   let newData = [];
-  [...Array(countOfPages).keys()].forEach(page => {
+  [...Array(countOfPages).keys()].forEach((page) => {
     newData = newData.concat(data[page].reverse());
   });
   data = newData;
 
   logger.info('Data filtering %s', data.length);
-  const resArr = [];
   data = data.filter(item => !dbData.find(iitem => iitem.id === item.id));
   logger.info('Data filtered %s', data.length);
 
@@ -133,11 +122,11 @@ async function sendFlatMessage(bot, item) {
   if (flats.length) {
     await setData('flats', data.concat(flats));
 
-    await (async function() {
+    await (async function () {
       for (const item of flats) {
         await sendFlatMessage(bot, item);
       }
-    })();
+    }());
 
     logger.info('done');
     process.exit();

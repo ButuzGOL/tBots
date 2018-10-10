@@ -9,7 +9,9 @@ const nameToImdb = require('name-to-imdb');
 const search = require('youtube-search');
 const Telegraf = require('telegraf');
 const moment = require('moment');
-const { getLogger, getData, setData, sendMessage } = require('../utils');
+const {
+  getLogger, getData, setData, sendMessage,
+} = require('../utils');
 
 const { youtubeKey } = require('./_cred');
 const { botToken } = require('../_cred');
@@ -19,10 +21,7 @@ const logger = getLogger(__dirname);
 moment.locale('ru');
 
 const API = 'https://planetakino.ua/odessa/showtimes/xml/';
-const CHAT_NAME =
-  process.env.NODE_ENV === 'production'
-    ? '@kino_primera_ukraine'
-    : '@butuzgoltestchat';
+const CHAT_NAME = process.env.NODE_ENV === 'production' ? '@kino_primera_ukraine' : '@butuzgoltestchat';
 
 const bot = new Telegraf(botToken);
 
@@ -42,20 +41,20 @@ async function getMovies(dbData) {
     return;
   }
 
-  const data = await new Promise(resolve => {
+  const data = await new Promise((resolve) => {
     parseString(xmlApiResult.data, (err, result) => resolve(result));
   });
 
   let movies = data['planeta-kino'].movies[0].movie.map(item => item);
   logger.info('Data xmp to json %s', movies.length);
   movies = movies
-    .filter(item => {
+    .filter((item) => {
       const startDate = new Date(item['dt-start'][0]);
+      // minus 1 day
       startDate.setDate(startDate.getDate() - 1);
-      const result = startDate.getTime() < new Date().getTime();
-      return result;
+      return startDate.getTime() < new Date().getTime();
     })
-    .map(item => {
+    .map((item) => {
       const parts = item.$.url.split('/');
       const id = parts[parts.length - 2];
       return {
@@ -66,14 +65,14 @@ async function getMovies(dbData) {
         dtStart: item['dt-start'][0],
         dtEnd: item['dt-end'][0],
       };
-    });
-  // .filter(item => !dbData.find(iitem => iitem.id === item.id));
+    })
+    .filter(item => !dbData.find(iitem => iitem.id === item.id));
 
   logger.info('Data filtered %s', movies.length);
   const promises = [];
   movies.forEach((item, index) => {
     promises.push(
-      new Promise(resolve => {
+      new Promise((resolve) => {
         logger.info('Fetching imdb %s %s', item.title, item.origName);
         nameToImdb(
           {
@@ -107,9 +106,7 @@ async function getMovies(dbData) {
                 return resolve();
               }
               search(
-                `${
-                  item.origName
-                } ${new Date().getFullYear()} трейлер на русском`,
+                `${item.origName} ${new Date().getFullYear()} трейлер на русском`,
                 youtubeSearchOpts,
                 (err, res) => {
                   if (err) {
@@ -147,10 +144,7 @@ function formatMessage(item) {
   return [
     item.youtube ? item.title : `[${item.title}](${item.link})`,
     item.imdb && `imdb: ${item.imdb.rating}`,
-    item.imdb &&
-      `Длительность: ${item.imdb.runtime
-        .replace('h', 'ч')
-        .replace('min', 'мин')}`,
+    item.imdb && `Длительность: ${item.imdb.runtime.replace('h', 'ч').replace('min', 'мин')}`,
     `Начало: ${moment(item.dtStart).format('LL')}`,
     // `Конец: ${moment(item.dtEnd).format('LL')}`,
     item.imdb && `Режиссер: ${item.imdb.director}`,
@@ -165,20 +159,20 @@ async function sendMovieMessage(bot, item) {
   await sendMessage(bot, CHAT_NAME, formatMessage(item));
 }
 
-(async function() {
-  let data = await getData('kino');
+(async function () {
+  const data = await getData('kino');
   const movies = await getMovies(data);
 
   if (movies.length) {
     await setData('kino', data.concat(movies));
 
-    await (async function() {
+    await (async function () {
       for (const item of movies) {
         await sendMovieMessage(bot, item);
       }
-    })();
+    }());
 
     logger.info('done');
     process.exit();
   }
-})();
+}());

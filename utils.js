@@ -7,7 +7,9 @@ const gh = new GitHub({ token: ghToken });
 let logger;
 function getLogger(dir) {
   if (logger) return logger;
-  const { combine, timestamp, colorize, printf, simple, splat } = format;
+  const {
+    combine, timestamp, colorize, printf, simple, splat,
+  } = format;
   logger = createLogger({
     transports: [],
   });
@@ -26,7 +28,7 @@ function getLogger(dir) {
           timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
           printf(info => `${info.timestamp} ${info.level}: ${info.message}`),
         ),
-        filename: dir + '/main.log',
+        filename: `${dir}/main.log`,
       }),
     );
   }
@@ -50,7 +52,7 @@ async function setData(name, data) {
   logger.info('Setting data to db...');
   try {
     const gist = await gh.getGist(gistId);
-    const gistRead = await gist.update({
+    await gist.update({
       files: { [name]: { content: JSON.stringify(data, null, 2) } },
     });
   } catch (e) {
@@ -59,10 +61,7 @@ async function setData(name, data) {
 }
 
 async function sendMessage(bot, chatName, message) {
-  logger.info(
-    'Sending message... %s',
-    message.replace(/\n/g, ' ').slice(0, 20) + '...',
-  );
+  logger.info('Sending message... %s', `${message.replace(/\n/g, ' ').slice(0, 20)}...`);
   try {
     await bot.telegram.sendMessage(chatName, message, {
       parse_mode: 'Markdown',
