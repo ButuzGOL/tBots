@@ -12,9 +12,6 @@ const { botToken } = require('../_cred');
 
 moment.locale('ru');
 
-const TYPE_APL = 'englandPremierLeague';
-const TYPE_CL = 'championsLeague';
-
 const API = 'http://goalhd.net';
 
 const CHAT_NAME = process.env.NODE_ENV === 'production' ? '@football_video_apl_cl' : '@butuzgoltestchat';
@@ -122,19 +119,19 @@ async function createImage(url, filename, crop) {
 
 (async () => {
   const data = await getData('goal');
-  const englandData = await getItems('england', TYPE_APL, 'Английская Премьер-Лига', data);
-  const championsLeagueData = await getItems('champions-league', TYPE_CL, 'Лига Чемпионов', data);
+  const englandItems = await getItems('england', 'englandPremierLeague', 'Английская Премьер-Лига', data);
+  const championsLeagueItems = await getItems('champions-league', 'championsLeague', 'Лига Чемпионов', data);
 
-  const resultData = englandData.concat(championsLeagueData);
-  if (resultData.length) {
-    await setData('goal', data.concat(resultData));
+  const items = englandItems.concat(championsLeagueItems);
+  if (items.length) {
+    await setData('goal', data.concat(items));
 
     await (async function () {
-      for (const item of englandData) {
+      for (const item of englandItems) {
         await sendVideoMessage(bot, item);
       }
     }());
-    if (englandData.length) {
+    if (englandItems.length) {
       await createImage('football.ua/england/table.html', 'england', [220, 220, 640, 700]);
       await sendPhoto(bot, CHAT_NAME, {
         source: `${__dirname}/tmp/england.png`,
@@ -142,11 +139,11 @@ async function createImage(url, filename, crop) {
     }
 
     await (async function () {
-      for (const item of championsLeagueData) {
+      for (const item of championsLeagueItems) {
         await sendVideoMessage(bot, item);
       }
     }());
-    if (championsLeagueData.length) {
+    if (championsLeagueItems.length) {
       await createImage('https://sport.ua/cl/results/fixture', 'champions-league', [
         150,
         660,

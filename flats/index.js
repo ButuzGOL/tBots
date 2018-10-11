@@ -103,9 +103,7 @@ function formatMessage(item) {
     }`,
     `Район: ${item.location}`,
     `Цена: ${item.price}`,
-  ]
-    .filter(item => item)
-    .join('\n');
+  ].join('\n');
 }
 
 async function sendFlatMessage(bot, item) {
