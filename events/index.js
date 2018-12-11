@@ -6,6 +6,8 @@ const {
   getLogger, getData, setData, sendPhoto,
 } = require('../utils');
 
+moment.locale('ru');
+
 const { botToken } = require('../_cred');
 
 const bot = new Telegraf(botToken);
@@ -96,10 +98,12 @@ async function getItems(dbData, type, countOfPages = 3) {
 
   logger.info('Data filtering %s', data.length);
 
-  data = data.filter(item => !dbData.find(iitem => iitem.id === item.id)).filter((item) => {
-    const startDate = +moment(item.startDate);
-    return startDate > FROM_DATE && startDate < TO_DATE;
-  });
+  data = data
+    .filter(item => !dbData.find(iitem => iitem.id === item.id))
+    .filter((item) => {
+      const startDate = +moment(item.startDate);
+      return startDate > FROM_DATE && startDate < TO_DATE;
+    });
 
   logger.info('Data filtered %s', data.length);
 
@@ -109,7 +113,11 @@ async function getItems(dbData, type, countOfPages = 3) {
 function formatMessage(item) {
   return [
     `[${item.title}](${item.url})`,
-    `Дата: ${Array.isArray(item.dates) ? `${item.dates[0]} - ${item.dates[1]}` : item.dates}`,
+    `Дата: ${moment(item.startDate)
+      .format('dd')
+      .toUpperCase()} ${
+      Array.isArray(item.dates) ? `${item.dates[0]} - ${item.dates[1]}` : `${item.dates}`
+    }`,
     `Время: ${moment(item.startDate).format('HH:mm')}`,
     `Место: [${item.location.name} ${item.location.address}](${item.location.url})`,
     `Цена: ${item.price}`,
@@ -130,6 +138,7 @@ async function sendItemMessage(bot, item) {
   const theatreItems = await getItems(data, 'theatre');
 
   const items = circusItems.concat(concertItems.concat(theatreItems));
+  items.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
 
   if (items.length) {
     await setData('events', data.concat(items));
